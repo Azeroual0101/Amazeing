@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mazegen"
+version = "0.1.0"
+authors = [
+  { name="Best Team", email="team@example.com" },
+]
+description = "A professional maze generator and solver"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/user/A_maze-ing"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mazegen*"]
