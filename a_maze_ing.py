@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 import sys
 from dataclasses import dataclass
 from typing import Optional
@@ -132,27 +133,50 @@ def main() -> None:
 
     try:
         cfg = parse_config(sys.argv[1])
+    except (OSError, ValueError) as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+    # --- Deterministic seed sequence ---
+    # A separate Random instance (master_rng) produces a fixed sequence of
+    # per-maze seeds.  This guarantees that across program restarts the
+    # nth generated maze is always identical, while each successive maze
+    # within a single run is still different.
+    # When no seed is configured, master_rng is None and every maze is
+    # purely random.
+    if cfg.seed is not None:
+        master_rng: Optional[random.Random] = random.Random(cfg.seed)
+    else:
+        master_rng = None
+
+    def _next_seed() -> Optional[int]:
+        """Return the next deterministic seed, or None for random."""
+        if master_rng is not None:
+            return master_rng.randint(0, 2**31)
+        return None
+
+    def _make_maze() -> tuple[MazeGenerator, Optional[str]]:
+        """Build a new maze and solve it."""
         gen = MazeGenerator(
             width=cfg.width,
             height=cfg.height,
             entry=cfg.entry,
             exit=cfg.exit,
             perfect=cfg.perfect,
-            seed=cfg.seed,
+            seed=_next_seed(),
         )
         gen.generate()
+        path = gen.solve()
+        return gen, path
 
-        # Initial save
-        path_str = gen.solve()
+    try:
+        gen, path_str = _make_maze()
         gen.save_maze(cfg.output_file, path_str)
         print(f"Maze successfully generated and saved to {cfg.output_file}")
-
     except (OSError, ValueError) as e:
         print(f"Error: {e}")
         sys.exit(1)
 
-    # For renderer usage
-    path_str = gen.solve()
     if path_str is None:
         print("Warning: No path found from entry to exit!")
 
@@ -165,21 +189,8 @@ def main() -> None:
             renderer.display()
             key = renderer.wait_key()
             if key == 'R':
-                # If a seed was provided in config, reuse it so the same maze
-                # is always reproduced. If no seed was given, use None so a
-                # fresh random maze is generated each time.
-                gen = MazeGenerator(
-                    width=cfg.width,
-                    height=cfg.height,
-                    entry=cfg.entry,
-                    exit=cfg.exit,
-                    perfect=cfg.perfect,
-                    seed=cfg.seed,
-                )
-                gen.generate()
-                path_str = gen.solve() or ""
-
-                gen.save_maze(cfg.output_file, path_str)
+                gen, path_str = _make_maze()
+                gen.save_maze(cfg.output_file, path_str or "")
 
                 renderer = MazeRenderer(
                     gen.grid, cfg.entry, cfg.exit, gen.pattern_cells
