@@ -30,7 +30,7 @@ def _parse_bool(value: str) -> bool:
 
 
 def _parse_xy(value: str) -> tuple[int, int]:
-    # Handle optional spaces around comma
+
     parts = [p.strip() for p in value.split(",")]
     if len(parts) != 2:
         raise ValueError(f"Invalid coordinate {value!r} (expected 'x,y')")
@@ -47,7 +47,6 @@ def parse_config(file_path: str) -> Config:
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             for lineno, line in enumerate(f, start=1):
-                # Remove comments and whitespace
                 s = line.split("#")[0].strip()
                 if not s:
                     continue
@@ -94,7 +93,6 @@ def parse_config(file_path: str) -> Config:
         try:
             seed = int(raw["SEED"])
         except ValueError:
-            # Fallback for non-integer seeds
             seed = sum(ord(c) for c in raw["SEED"])
 
     if width <= 0 or height <= 0:
@@ -123,8 +121,6 @@ def parse_config(file_path: str) -> Config:
     )
 
 
-
-
 def main() -> None:
     """Entry point for the maze generator application."""
     if len(sys.argv) != 2:
@@ -137,13 +133,6 @@ def main() -> None:
         print(f"Error: {e}")
         sys.exit(1)
 
-    # --- Deterministic seed sequence ---
-    # A separate Random instance (master_rng) produces a fixed sequence of
-    # per-maze seeds.  This guarantees that across program restarts the
-    # nth generated maze is always identical, while each successive maze
-    # within a single run is still different.
-    # When no seed is configured, master_rng is None and every maze is
-    # purely random.
     if cfg.seed is not None:
         master_rng: Optional[random.Random] = random.Random(cfg.seed)
     else:

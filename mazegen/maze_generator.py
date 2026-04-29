@@ -5,7 +5,7 @@ from collections import deque
 
 from typing import Optional, Generator, Deque, Set, Tuple
 
-# Direction bit constants (N=1, E=2, S=4, W=8)
+
 N = 1
 E = 2
 S = 4
@@ -19,7 +19,6 @@ DIRS = [
     (-1, 0, W, 'W'),   # West
 ]
 
-# Opposite wall mapping
 OPPOSITE = {N: S, S: N, E: W, W: E}
 
 
@@ -60,8 +59,6 @@ class MazeGenerator:
         self.exit: tuple[int, int] = exit
         self.perfect: bool = perfect
         self.seed: Optional[int] = seed
-        # Always reset the random seed. None = system/random time.
-        # We check 'is not None' because '0' is a valid seed but evaluates to False.
         if self.seed is not None:
             random.seed(self.seed)
 
@@ -103,12 +100,11 @@ class MazeGenerator:
         This ensures the 42-pattern cells appear truly "blocked off" with
         consistent, coherent wall state between cell and its neighbors.
         """
-        self.grid[y][x] = 15  # close all walls of this cell
-        # For each neighbor, close the wall on their side facing this cell
+        self.grid[y][x] = 15
         for dx, dy, wall, label in DIRS:
             nx, ny = x + dx, y + dy
             if self._in_bounds(nx, ny):
-                # close the neighbor's wall that faces (x,y)
+
                 self.grid[ny][nx] |= OPPOSITE[wall]
 
     def generate(self) -> None:
@@ -126,7 +122,6 @@ class MazeGenerator:
         if not self.perfect:
             self._add_loops(loop_factor=0.08)
 
-        # Re-seal all 42 cells after DFS (DFS may have opened their walls)
         for px, py in self.pattern_cells:
             self._seal_cell(px, py)
 
@@ -194,26 +189,23 @@ class MazeGenerator:
                 if (px, py) not in self.pattern_cells:
                     self.pattern_cells.append((px, py))
 
-        # -------- DRAW 4 --------
         for i in range(4):
-            mark(start_x, start_y + i)         # Left bar
+            mark(start_x, start_y + i)
         for i in range(7):
-            mark(start_x + 3, start_y + i)     # Right bar
+            mark(start_x + 3, start_y + i)
         for j in range(1, 3):
-            mark(start_x + j, start_y + 3)     # Horizontal bar
+            mark(start_x + j, start_y + 3)
 
-        # -------- DRAW 2 --------
         ox = start_x + 5
         for j in range(4):
-            mark(ox + j, start_y)              # Top bar
-            mark(ox + j, start_y + 3)          # Middle bar
-            mark(ox + j, start_y + 6)          # Bottom bar
+            mark(ox + j, start_y)
+            mark(ox + j, start_y + 3)
+            mark(ox + j, start_y + 6)
         for i in range(1, 3):
-            mark(ox + 3, start_y + i)          # Top-right vertical
+            mark(ox + 3, start_y + i)
         for i in range(4, 6):
-            mark(ox, start_y + i)              # Bottom-left vertical
+            mark(ox, start_y + i)
 
-        # OVERLAP CHECK
         entry = self.entry
         exit_ = self.exit
         if entry in self.pattern_cells:

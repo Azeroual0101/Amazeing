@@ -6,7 +6,7 @@ import os
 import sys
 from typing import List, Tuple, Optional
 
-# ANSI color codes
+
 COLORS = {
     'reset': '\033[0m',
     'wall': '\033[90m',      # grey
@@ -64,7 +64,6 @@ class MazeRenderer:
         """Check if cell (x,y) lies on the computed path."""
         if not self.show_path or not self.path_directions:
             return False
-        # Reconstruct path coordinates from directions
         cx, cy = self.entry
         if (cx, cy) == (x, y):
             return True
@@ -88,27 +87,22 @@ class MazeRenderer:
         res = COLORS['reset']
 
         for y in range(self.height):
-            # Top walls line
             top = ""
             for x in range(self.width):
                 cell = self.grid[y][x]
-                if cell & 1:   # north wall closed
+                if cell & 1:
                     top += f"{wc}+---{res}"
                 else:
                     top += f"{wc}+{res}   "
             print(top + f"{wc}+{res}")
 
-            # Middle line (left wall + cell content)
             middle = ""
             for x in range(self.width):
                 cell = self.grid[y][x]
-                # Left wall
                 if cell & 8:
                     middle += f"{wc}|{res}"
                 else:
                     middle += " "
-
-                # Cell content
                 if (x, y) == self.entry:
                     middle += f"{COLORS['entry']} E {COLORS['reset']}"
                 elif (x, y) == self.exit:
@@ -119,15 +113,10 @@ class MazeRenderer:
                     middle += f"{COLORS['path']} * {COLORS['reset']}"
                 else:
                     middle += "   "
-            # Right wall
             middle += f"{wc}|{res}"
             print(middle)
-
-        # Bottom wall line
         bottom = (f"{wc}+---{res}" * self.width) + f"{wc}+{res}"
         print(bottom)
-
-        # Print legend
         print("\nCommands: [R]egen  [P]ath  [C]olor  [Q]uit")
         if self.status_msg:
             print(
@@ -139,7 +128,6 @@ class MazeRenderer:
         """Wait for a single key press and return it as uppercase."""
         if sys.platform == 'win32':
             import msvcrt
-            # Read character, check for Ctrl+C (b'\x03')
             ch_bytes = msvcrt.getch()
             if ch_bytes == b'\x03':
                 raise KeyboardInterrupt
@@ -155,9 +143,8 @@ class MazeRenderer:
             try:
                 tty.setraw(fd)
                 ch = sys.stdin.read(1)
-                # Check for Ctrl+C in raw mode
                 if ch == '\x03':
                     raise KeyboardInterrupt
                 return ch.upper()
             finally:
-                termios.tcsetattr(fd, termios.TCSADRAIN, old)
+                termios.tcsetattr(fd, termios.TCSADRAIN, old)
